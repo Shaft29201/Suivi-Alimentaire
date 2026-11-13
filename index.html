@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MonSuivi">
+  <title>Mon Suivi Alimentaire</title>
+  <style>
+    :root {
+      --primary: #FF6B6B;
+      --secondary: #4ECDC4;
+      --accent-yellow: #FFE66D;
+      --accent-purple: #9D4EDD;
+      --accent-orange: #FF9F1C;
+      --accent-green: #2EC4B6;
+      --danger: #E63946;
+      --bg: #F7F9FC;
+      --card-bg: #FFFFFF;
+      --text-main: #2D3748;
+      --text-muted: #718096;
+      --border-color: #E2E8F0;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 30px) 16px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* En-tête */
+    header {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* Onglets */
+    .tab-bar {
+      display: flex;
+      background: #EDF2F7;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      gap: 2px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 9px 0;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Vues */
+    .tab-view {
+      display: none;
+    }
+    .tab-view.active {
+      display: block;
+    }
+
+    /* Datepicker */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-bg);
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .date-nav button {
+      background: #EDF2F7;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .date-nav input[type="date"] {
+      border: 1px solid var(--border-color);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      background: #FAF5FF;
+    }
+
+    /* Carte de synthèse des points et budget */
+    .budget-card {
+      background: linear-gradient(135deg, #FF6B6B, #FF8E72);
+      color: white;
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-bottom: 18px;
+      box-shadow: 0 6px 16px rgba(255, 107, 107, 0.35);
+    }
+
+    .budget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .budget-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.9;
+    }
+
+    .budget-values {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    .value-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .value-label {
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .value-number {
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .margin-pill {
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      background: white;
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .margin-pill.ok {
+      background: #D8F3DC;
+      color: #1B4332;
+    }
+
+    .margin-pill.over {
+      background: #FFE3E3;
+      color: #9B2226;
+    }
+
+    /* Blocs de Repas */
+    .meal-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+      border-left: 6px solid var(--secondary);
+    }
+
+    .meal-card.collat-matin { border-left-color: var(--accent-yellow); }
+    .meal-card.dejeuner { border-left-color: var(--secondary); }
+    .meal-card.gouter { border-left-color: var(--accent-orange); }
+    .meal-card.diner { border-left-color: var(--accent-purple); }
+    .meal-card.fringale { border-left-color: var(--primary); }
+
+    .meal-header {
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .meal-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .meal-points {
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: #F1F5F9;
+      padding: 3px 9px;
+      border-radius: 20px;
+      color: var(--text-main);
+    }
+
+    .meal-items-list {
+      padding: 6px 14px;
+    }
+
+    .meal-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px dashed var(--border-color);
+      font-size: 0.9rem;
+    }
+
+    .meal-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-desc { flex: 1; }
+    .item-pts {
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0 10px;
+    }
+
+    .delete-btn {
+      color: #CBD5E1;
+      border: none;
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .delete-btn:hover { color: var(--primary); }
+
+    .add-food-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #FAFAFA;
+      border: none;
+      border-top: 1px solid var(--border-color);
+      padding: 9px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      padding: 12px 14px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    /* Cartes formulaires */
+    .form-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .field-group {
+      margin-bottom: 12px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .field-group input, .field-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #FFF;
+      color: var(--text-main);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 11px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-submit.secondary-action {
+      background: var(--secondary);
+    }
+
+    /* Cartes bibliothèque */
+    .food-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .food-card-title { font-weight: 700; font-size: 0.9rem; }
+    .food-card-detail { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Graphique SVG */
+    .chart-container {
+      background: #FFFFFF;
+      border-radius: 10px;
+      padding: 12px 6px;
+      border: 1px solid var(--border-color);
+      margin-top: 10px;
+    }
+
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* Liste des pesées */
+    .weight-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      padding: 18px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      background: #E2E8F0;
+      color: var(--text-main);
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .backup-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🥗 Suivi & Équilibre</h1>
+  </header>
+
+  <!-- Navigation par onglets -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('journal')">Journal</button>
+    <button class="tab-btn" onclick="switchTab('library')">Aliments</button>
+    <button class="tab-btn" onclick="switchTab('user')">Profil & Poids</button>
+    <button class="tab-btn" onclick="switchTab('settings')">Données</button>
+  </div>
+
+  <!-- VUE 1 : JOURNAL -->
+  <div id="view-journal" class="tab-view active">
+    <div class="date-nav">
+      <button onclick="changeDay(-1)">‹</button>
+      <input type="date" id="current-date-input" onchange="onDateChanged()">
+      <button onclick="changeDay(1)">›</button>
+    </div>
+
+    <!-- Synthèse et Marge -->
+    <div class="budget-card">
+      <div class="budget-header">
+        <span class="budget-title" id="selected-date-label">Aujourd'hui</span>
+        <span style="font-size: 0.8rem; opacity: 0.85;">Objectif : <strong id="card-goal-pts">26</strong> pts</span>
+      </div>
+
+      <div class="budget-values">
+        <div class="value-col">
+          <span class="value-label">Points utilisés</span>
+          <span class="value-number" id="daily-total-points">0 pt</span>
+        </div>
+        <div class="value-col" style="align-items: flex-end;">
+          <span class="value-label" id="budget-status-label">Marge restante</span>
+          <span class="value-number" id="budget-margin-value">+26 pt</span>
+        </div>
+      </div>
+
+      <div class="margin-pill ok" id="budget-pill-alert">
+        Dans les clous : il vous reste 26 points
+      </div>
+    </div>
+
+    <!-- Liste des repas -->
+    <div id="meals-container"></div>
+  </div>
+
+  <!-- VUE 2 : BIBLIOTHÈQUE -->
+  <div id="view-library" class="tab-view">
+    <div class="form-card">
+      <h2>+ Nouvel aliment</h2>
+      <div class="field-group">
+        <label for="food-name">Nom de l'aliment</label>
+        <input type="text" id="food-name" placeholder="Ex: Flocons d'avoine, Saumon...">
+      </div>
+      <div class="field-group">
+        <label for="food-unit">Unité de mesure</label>
+        <select id="food-unit">
+          <option value="portion">Portion standard (1 part)</option>
+          <option value="g">Grammes (100 g)</option>
+          <option value="cl">Centilitres (100 cl / ml)</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="food-points">Points pour cette unité</label>
+        <input type="number" id="food-points" step="0.5" placeholder="Ex: 3">
+      </div>
+      <button class="btn-submit" onclick="addFoodToLibrary()">Enregistrer l'aliment</button>
+    </div>
+
+    <h2 style="font-size: 0.95rem; margin-bottom: 10px; color: var(--text-muted);">Aliments enregistrés</h2>
+    <div id="library-list"></div>
+  </div>
+
+  <!-- VUE 3 : PROFIL & POIDS -->
+  <div id="view-user" class="tab-view">
+    <!-- Configuration des objectifs -->
+    <div class="form-card">
+      <h2>🎯 Mes Objectifs</h2>
+      <div class="field-group">
+        <label for="user-goal-points">Objectif quotidien de points</label>
+        <input type="number" id="user-goal-points" step="1" value="26">
+      </div>
+      <div class="field-group">
+        <label for="user-goal-weight">Objectif de poids (kg)</label>
+        <input type="number" id="user-goal-weight" step="0.1" placeholder="Ex: 68.0">
+      </div>
+      <button class="btn-submit secondary-action" onclick="saveUserGoals()">Mettre à jour mes objectifs</button>
+    </div>
+
+    <!-- Enregistrer une pesée -->
+    <div class="form-card">
+      <h2>⚖️ Enregistrer une pesée</h2>
+      <div class="field-group">
+        <label for="weight-date">Date de pesée</label>
+        <input type="date" id="weight-date">
+      </div>
+      <div class="field-group">
+        <label for="weight-value">Poids mesuré (kg)</label>
+        <input type="number" id="weight-value" step="0.1" placeholder="Ex: 72.4">
+      </div>
+      <button class="btn-submit" onclick="addWeightEntry()">Ajouter cette pesée</button>
+    </div>
+
+    <!-- Graphique d'évolution -->
+    <div class="form-card">
+      <h2>📈 Progression & Évolution</h2>
+      <div class="chart-container" id="chart-wrapper">
+        <svg id="weight-svg-chart" viewBox="0 0 360 200" style="width: 100%; height: auto; display: block;"></svg>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-dot" style="background: var(--primary);"></span>
+            <span>Pesées réelles</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background: var(--secondary);"></span>
+            <span>Objectif cible</span>
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 14px;">
+        <h3 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Historique des pesées</h3>
+        <div id="weight-history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VUE 4 : SAUVEGARDE -->
+  <div id="view-settings" class="tab-view">
+    <div class="form-card">
+      <h2>💾 Sauvegarde locale</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+        Vos données sont stockées sur votre appareil. Vous pouvez exporter un fichier de secours ou le transférer vers un autre iPhone.
+      </p>
+      <div class="backup-actions">
+        <button class="btn-secondary" onclick="exportData()">Exporter (JSON)</button>
+        <label class="btn-secondary" style="display:flex; align-items:center; justify-content:center;">
+          Importer
+          <input type="file" id="import-file" style="display:none;" onchange="importData(event)">
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL D'AJOUT D'ALIMENT AU REPAS -->
+  <div class="modal-overlay" id="add-modal">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 12px;" id="modal-meal-title">Ajouter au repas</h3>
+      <div class="field-group">
+        <label for="modal-food-select">Choisir un aliment</label>
+        <select id="modal-food-select" onchange="onModalFoodSelectChange()"></select>
+      </div>
+      <div class="field-group">
+        <label id="modal-quantity-label" for="modal-quantity">Quantité</label>
+        <input type="number" id="modal-quantity" step="0.1" value="1">
+      </div>
+      <div style="font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--primary);" id="modal-calc-preview">
+        Points estimés : 0 pt
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn-submit" style="flex: 2;" onclick="confirmAddMealItem()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MEAL_TYPES = [
+      { id: "ptit_dej", label: "Petit-déjeuner", class: "ptit-dej" },
+      { id: "collat_matin", label: "Goûter du matin", class: "collat-matin" },
+      { id: "dejeuner", label: "Déjeuner", class: "dejeuner" },
+      { id: "gouter", label: "Goûter de l'après-midi", class: "gouter" },
+      { id: "diner", label: "Dîner", class: "diner" },
+      { id: "fringale", label: "Fringale / Extra", class: "fringale" }
+    ];
+
+    const DEFAULT_LIBRARY = [
+      { id: "f1", name: "Pomme moyenne", unit: "portion", points: 0 },
+      { id: "f2", name: "Pain complet", unit: "g", points: 3 },
+      { id: "f3", name: "Yaourt nature", unit: "portion", points: 1.5 },
+      { id: "f4", name: "Huile d'olive (1 cuillère à café)", unit: "portion", points: 1 },
+      { id: "f5", name: "Lait demi-écrémé", unit: "cl", points: 2 }
+    ];
+
+    // Modèle de données
+    let appData = {
+      library: [],
+      logs: {},
+      user: {
+        dailyPointsGoal: 26,
+        targetWeight: 70.0,
+        weights: [] // [{ date: 'YYYY-MM-DD', weight: 73.5 }]
+      }
+    };
+
+    let selectedDate = new Date().toISOString().split("T")[0];
+    let currentMealTarget = null;
+
+    function init() {
+      const stored = localStorage.getItem("mon_suivi_data_v1");
+      if (stored) {
+        try {
+          appData = JSON.parse(stored);
+        } catch (e) {
+          console.error("Erreur de parsing", e);
+        }
+      } else {
+        appData.library = DEFAULT_LIBRARY;
+      }
+
+      // Rétrocompatibilité : initialiser le profil utilisateur s'il n'existe pas
+      if (!appData.user) {
+        appData.user = {
+          dailyPointsGoal: 26,
+          targetWeight: 70.0,
+          weights: []
+        };
+      }
+      if (!appData.user.weights) appData.user.weights = [];
+      saveData();
+
+      document.getElementById("current-date-input").value = selectedDate;
+      document.getElementById("weight-date").value = selectedDate;
+      document.getElementById("user-goal-points").value = appData.user.dailyPointsGoal || 26;
+      document.getElementById("user-goal-weight").value = appData.user.targetWeight || "";
+
+      renderJournal();
+      renderLibrary();
+      renderUserTab();
+    }
+
+    function saveData() {
+      localStorage.setItem("mon_suivi_data_v1", JSON.stringify(appData));
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-view").forEach(view => view.classList.remove("active"));
+
+      const tabs = ["journal", "library", "user", "settings"];
+      const idx = tabs.indexOf(tabName);
+      if (idx !== -1) {
+        document.querySelectorAll(".tab-btn")[idx].classList.add("active");
+        document.getElementById(`view-${tabName}`).classList.add("active");
+      }
+
+      if (tabName === "journal") renderJournal();
+      if (tabName === "library") renderLibrary();
+      if (tabName === "user") renderUserTab();
+    }
+
+    // Gestion de la Date
+    function changeDay(delta) {
+      const parts = selectedDate.split("-");
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      d.setDate(d.getDate() + delta);
+      selectedDate = d.toISOString().split("T")[0];
+      document.getElementById("current-date-input").value = selectedDate;
+      renderJournal();
+    }
+
+    function onDateChanged() {
+      const val = document.getElementById("current-date-input").value;
+      if (val) {
+        selectedDate = val;
+        renderJournal();
+      }
+    }
+
+    // Rendu du Journal & Calcul de la Marge
+    function renderJournal() {
+      const container = document.getElementById("meals-container");
+      container.innerHTML = "";
+
+      const todayStr = new Date().toISOString().split("T")[0];
+      const dateLabel = document.getElementById("selected-date-label");
+      if (selectedDate === todayStr) {
+        dateLabel.textContent = "Aujourd'hui";
+      } else {
+        const parts = selectedDate.split("-");
+        dateLabel.textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+
+      const dayLogs = appData.logs[selectedDate] || {};
+      let dailyTotal = 0;
+
+      MEAL_TYPES.forEach(meal => {
+        const items = dayLogs[meal.id] || [];
+        let mealPointsTotal = 0;
+
+        const card = document.createElement("div");
+        card.className = `meal-card ${meal.class}`;
+
+        let itemsHtml = "";
+        if (items.length === 0) {
+          itemsHtml = `<div class="empty-state">Rien d'enregistré</div>`;
+        } else {
+          itemsHtml = `<div class="meal-items-list">`;
+          items.forEach((item, index) => {
+            mealPointsTotal += item.points;
+            itemsHtml += `
+              <div class="meal-item-row">
+                <div class="item-desc">
+                  <strong>${item.name}</strong> 
+                  <span style="color:var(--text-muted); font-size:0.8rem;">(${item.quantity} ${formatUnitLabel(item.unit, item.quantity)})</span>
+                </div>
+                <div class="item-pts">${roundPts(item.points)} pt</div>
+                <button class="delete-btn" onclick="deleteMealItem('${meal.id}', ${index})">✕</button>
+              </div>
+            `;
+          });
+          itemsHtml += `</div>`;
+        }
+
+        dailyTotal += mealPointsTotal;
+
+        card.innerHTML = `
+          <div class="meal-header">
+            <span class="meal-title">${meal.label}</span>
+            <span class="meal-points">${roundPts(mealPointsTotal)} pt</span>
+          </div>
+          ${itemsHtml}
+          <button class="add-food-btn" onclick="openAddModal('${meal.id}', '${meal.label}')">+ Ajouter un aliment</button>
+        `;
+
+        container.appendChild(card);
+      });
+
+      // Calcul des marges et dépassements
+      const goal = appData.user.dailyPointsGoal || 26;
+      document.getElementById("card-goal-pts").textContent = goal;
+      document.getElementById("daily-total-points").textContent = `${roundPts(dailyTotal)} pt`;
+
+      const margin = goal - dailyTotal;
+      const marginLabel = document.getElementById("budget-status-label");
+      const marginVal = document.getElementById("budget-margin-value");
+      const pill = document.getElementById("budget-pill-alert");
+
+      if (margin >= 0) {
+        marginLabel.textContent = "Marge restante";
+        marginVal.textContent = `+${roundPts(margin)} pt`;
+        pill.className = "margin-pill ok";
+        pill.textContent = `✅ Dans les clous : il vous reste ${roundPts(margin)} point(s)`;
+      } else {
+        const over = Math.abs(margin);
+        marginLabel.textContent = "Dépassement";
+        marginVal.textContent = `-${roundPts(over)} pt`;
+        pill.className = "margin-pill over";
+        pill.textContent = `⚠️ Dépassement : +${roundPts(over)} point(s) au-dessus de l'objectif`;
+      }
+    }
+
+    function formatUnitLabel(unit, qty) {
+      if (unit === "portion") return qty > 1 ? "portions" : "portion";
+      return unit;
+    }
+
+    function roundPts(num) {
+      return (Math.round(num * 10) / 10).toString();
+    }
+
+    // Gestion du Volet Utilisateur (Objectifs & Poids)
+    function saveUserGoals() {
+      const pts = parseFloat(document.getElementById("user-goal-points").value);
+      const targetW = parseFloat(document.getElementById("user-goal-weight").value);
+
+      if (!isNaN(pts) && pts > 0) appData.user.dailyPointsGoal = pts;
+      if (!isNaN(targetW) && targetW > 0) appData.user.targetWeight = targetW;
+
+      saveData();
+      alert("Objectifs enregistrés avec succès !");
+      renderJournal();
+      renderUserTab();
+    }
+
+    function addWeightEntry() {
+      const date = document.getElementById("weight-date").value;
+      const val = parseFloat(document.getElementById("weight-value").value);
+
+      if (!date) {
+        alert("Veuillez sélectionner une date.");
+        return;
+      }
+      if (isNaN(val) || val <= 20 || val >= 300) {
+        alert("Veuillez saisir un poids valide en kg.");
+        return;
+      }
+
+      // Remplacer si déjà pesé le même jour ou ajouter
+      const existingIdx = appData.user.weights.findIndex(w => w.date === date);
+      if (existingIdx !== -1) {
+        appData.user.weights[existingIdx].weight = val;
+      } else {
+        appData.user.weights.push({ date: date, weight: val });
+      }
+
+      // Trier par date chronologique
+      appData.user.weights.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      saveData();
+      document.getElementById("weight-value").value = "";
+      renderUserTab();
+    }
+
+    function deleteWeightEntry(idx) {
+      if (confirm("Supprimer cette pesée ?")) {
+        appData.user.weights.splice(idx, 1);
+        saveData();
+        renderUserTab();
+      }
+    }
+
+    function renderUserTab() {
+      renderWeightList();
+      renderWeightChart();
+    }
+
+    function renderWeightList() {
+      const list = document.getElementById("weight-history-list");
+      list.innerHTML = "";
+
+      if (appData.user.weights.length === 0) {
+        list.innerHTML = `<div class="empty-state">Aucune pesée enregistrée pour le moment.</div>`;
+        return;
+      }
+
+      // Afficher les dernières pesées en premier
+      const reversed = [...appData.user.weights].reverse();
+      reversed.forEach((entry, rIdx) => {
+        const actualIdx = appData.user.weights.length - 1 - rIdx;
+        const row = document.createElement("div");
+        row.className = "weight-row";
+        const parts = entry.date.split("-");
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+        row.innerHTML = `
+          <span>📅 ${formattedDate}</span>
+          <span style="font-weight:700; color:var(--primary);">${entry.weight} kg</span>
+          <button class="delete-btn" onclick="deleteWeightEntry(${actualIdx})">✕</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    // Graphique SVG Responsive
+    function renderWeightChart() {
+      const svg = document.getElementById("weight-svg-chart");
+      const weights = appData.user.weights;
+      const target = appData.user.targetWeight;
+
+      if (weights.length === 0) {
+        svg.innerHTML = `
+          <text x="180" y="105" text-anchor="middle" fill="#A0AEC0" font-size="13">
+            Ajoutez au moins une pesée pour tracer le graphique
+          </text>
+        `;
+        return;
+      }
+
+      const width = 360;
+      const height = 200;
+      const padLeft = 45;
+      const padRight = 20;
+      const padTop = 20;
+      const padBottom = 30;
+
+      // Déterminer bornes min / max
+      let allValues = weights.map(w => w.weight);
+      if (target) allValues.push(target);
+
+      let minW = Math.min(...allValues) - 1.5;
+      let maxW = Math.max(...allValues) + 1.5;
+      if (minW === maxW) { minW -= 2; maxW += 2; }
+
+      const getX = (idx) => {
+        if (weights.length === 1) return (width - padLeft - padRight) / 2 + padLeft;
+        return padLeft + (idx / (weights.length - 1)) * (width - padLeft - padRight);
+      };
+
+      const getY = (val) => {
+        return padTop + ((maxW - val) / (maxW - minW)) * (height - padTop - padBottom);
+      };
+
+      let svgHtml = "";
+
+      // Lignes de repère horizontales
+      const steps = 4;
+      for (let i = 0; i <= steps; i++) {
+        const val = minW + (i / steps) * (maxW - minW);
+        const y = getY(val);
+        svgHtml += `
+          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#EDF2F7" stroke-width="1" />
+          <text x="${padLeft - 6}" y="${y + 4}" text-anchor="end" fill="#A0AEC0" font-size="9">${Math.round(val * 10) / 10}</text>
+        `;
+      }
+
+      // Ligne d'objectif (vert turquoise)
+      if (target) {
+        const targetY = getY(target);
+        svgHtml += `
+          <line x1="${padLeft}" y1="${targetY}" x2="${width - padRight}" y2="${targetY}" stroke="#4ECDC4" stroke-width="2" stroke-dasharray="4 4" />
+          <text x="${width - padRight}" y="${targetY - 5}" text-anchor="end" fill="#2EC4B6" font-size="10" font-weight="bold">Cible: ${target}kg</text>
+        `;
+      }
+
+      // Tracé des pesées réelles
+      let pointsStr = "";
+      weights.forEach((w, idx) => {
+        const x = getX(idx);
+        const y = getY(w.weight);
+        pointsStr += `${x},${y} `;
+      });
+
+      if (weights.length > 1) {
+        svgHtml += `<polyline fill="none" stroke="#FF6B6B" stroke-width="3" points="${pointsStr.trim()}" stroke-linecap="round" stroke-linejoin="round" />`;
+      }
+
+      // Points et valeurs
+      weights.forEach((w, idx) => {
+        const x = getX(idx);
+        const y = getY(w.weight);
+        const parts = w.date.split("-");
+        const dateTag = `${parts[2]}/${parts[1]}`;
+
+        svgHtml += `
+          <circle cx="${x}" cy="${y}" r="5" fill="#FFFFFF" stroke="#FF6B6B" stroke-width="3" />
+          <text x="${x}" y="${y - 8}" text-anchor="middle" fill="#2D3748" font-size="10" font-weight="bold">${w.weight}</text>
+          <text x="${x}" y="${height - 10}" text-anchor="middle" fill="#A0AEC0" font-size="8">${dateTag}</text>
+        `;
+      });
+
+      svg.innerHTML = svgHtml;
+    }
+
+    // Gestion de la Bibliothèque
+    function renderLibrary() {
+      const list = document.getElementById("library-list");
+      list.innerHTML = "";
+
+      if (appData.library.length === 0) {
+        list.innerHTML = `<div class="empty-state">Aucun aliment dans votre bibliothèque.</div>`;
+        return;
+      }
+
+      appData.library.forEach((food, idx) => {
+        const item = document.createElement("div");
+        item.className = "food-card";
+        let unitText = food.unit === "portion" ? "la portion" : `100 ${food.unit}`;
+
+        item.innerHTML = `
+          <div>
+            <div class="food-card-title">${food.name}</div>
+            <div class="food-card-detail">${food.points} point(s) pour ${unitText}</div>
+          </div>
+          <button class="delete-btn" onclick="deleteLibraryItem(${idx})">✕</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function addFoodToLibrary() {
+      const name = document.getElementById("food-name").value.trim();
+      const unit = document.getElementById("food-unit").value;
+      const points = parseFloat(document.getElementById("food-points").value);
+
+      if (!name) return alert("Veuillez saisir un nom d'aliment.");
+      if (isNaN(points) || points < 0) return alert("Valeur de points invalide.");
+
+      appData.library.push({
+        id: "f_" + Date.now(),
+        name: name,
+        unit: unit,
+        points: points
+      });
+
+      saveData();
+      renderLibrary();
+      document.getElementById("food-name").value = "";
+      document.getElementById("food-points").value = "";
+    }
+
+    function deleteLibraryItem(index) {
+      if (confirm("Supprimer cet aliment ?")) {
+        appData.library.splice(index, 1);
+        saveData();
+        renderLibrary();
+      }
+    }
+
+    // Modal Ajout au Repas
+    function openAddModal(mealId, mealLabel) {
+      if (appData.library.length === 0) {
+        alert("Veuillez créer des aliments dans l'onglet 'Aliments' d'abord.");
+        switchTab("library");
+        return;
+      }
+
+      currentMealTarget = mealId;
+      document.getElementById("modal-meal-title").textContent = `Ajouter à : ${mealLabel}`;
+
+      const select = document.getElementById("modal-food-select");
+      select.innerHTML = "";
+      appData.library.forEach(food => {
+        const opt = document.createElement("option");
+        opt.value = food.id;
+        opt.textContent = `${food.name} (${food.points} pts / ${food.unit})`;
+        select.appendChild(opt);
+      });
+
+      onModalFoodSelectChange();
+      document.getElementById("add-modal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("add-modal").classList.remove("active");
+      currentMealTarget = null;
+    }
+
+    function onModalFoodSelectChange() {
+      const foodId = document.getElementById("modal-food-select").value;
+      const food = appData.library.find(f => f.id === foodId);
+      if (!food) return;
+
+      const qtyInput = document.getElementById("modal-quantity");
+      const label = document.getElementById("modal-quantity-label");
+
+      if (food.unit === "portion") {
+        label.textContent = "Nombre de portion(s)";
+        qtyInput.value = 1;
+        qtyInput.step = "0.5";
+      } else {
+        label.textContent = `Quantité en ${food.unit}`;
+        qtyInput.value = 100;
+        qtyInput.step = "10";
+      }
+      updateModalCalc();
+    }
+
+    document.getElementById("modal-quantity").addEventListener("input", updateModalCalc);
+
+    function updateModalCalc() {
+      const foodId = document.getElementById("modal-food-select").value;
+      const food = appData.library.find(f => f.id === foodId);
+      const qty = parseFloat(document.getElementById("modal-quantity").value) || 0;
+
+      let calcPoints = 0;
+      if (food) {
+        calcPoints = food.unit === "portion" ? food.points * qty : (food.points * qty) / 100;
+      }
+      document.getElementById("modal-calc-preview").textContent = `Points estimés : ${roundPts(calcPoints)} pt`;
+    }
+
+    function confirmAddMealItem() {
+      const foodId = document.getElementById("modal-food-select").value;
+      const food = appData.library.find(f => f.id === foodId);
+      const qty = parseFloat(document.getElementById("modal-quantity").value);
+
+      if (!food || isNaN(qty) || qty <= 0) return alert("Quantité invalide.");
+
+      const calcPoints = food.unit === "portion" ? food.points * qty : (food.points * qty) / 100;
+
+      if (!appData.logs[selectedDate]) appData.logs[selectedDate] = {};
+      if (!appData.logs[selectedDate][currentMealTarget]) appData.logs[selectedDate][currentMealTarget] = [];
+
+      appData.logs[selectedDate][currentMealTarget].push({
+        foodId: food.id,
+        name: food.name,
+        quantity: qty,
+        unit: food.unit,
+        points: calcPoints
+      });
+
+      saveData();
+      closeModal();
+      renderJournal();
+    }
+
+    function deleteMealItem(mealId, index) {
+      if (appData.logs[selectedDate] && appData.logs[selectedDate][mealId]) {
+        appData.logs[selectedDate][mealId].splice(index, 1);
+        saveData();
+        renderJournal();
+      }
+    }
+
+    // Sauvegarde & Export
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const dlAnchor = document.createElement("a");
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", `suivi_alimentaire_sauvegarde_${selectedDate}.json`);
+      dlAnchor.click();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.library && imported.logs) {
+            appData = imported;
+            if (!appData.user) {
+              appData.user = { dailyPointsGoal: 26, targetWeight: 70, weights: [] };
+            }
+            saveData();
+            renderJournal();
+            renderLibrary();
+            renderUserTab();
+            alert("Données restaurées avec succès !");
+          } else {
+            alert("Fichier de sauvegarde invalide.");
+          }
+        } catch (err) {
+          alert("Erreur lors de la lecture du fichier JSON.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
